@@ -166,3 +166,6 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(kinect_v2_client src/kinect_v2_client.cpp src/Util.cpp src/base64.cpp)
+target_link_libraries(kinect_v2_client ${catkin_LIBRARIES} ${OpenCV_LIBS} ${ZMQ_LIBRARIE} msgpack)

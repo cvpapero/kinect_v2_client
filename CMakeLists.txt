@@ -101,7 +101,11 @@ catkin_package(
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
-
+find_library(ZMQ_LIBRARIE
+	NAMES libzmq.so
+	HITNS /usr/local/lib/
+	PATH_SUFFIXES lib
+)
 ## Declare a cpp library
 # add_library(kinect_v2_client
 #   src/${PROJECT_NAME}/kinect_v2_client.cpp
