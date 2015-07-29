@@ -2,7 +2,7 @@
 2015.4.9----------------
 やること：tf2に移行する
 */
- 
+  
 #include <iostream>
 #include <fstream>
 #include <vector>

@@ -1,6 +1,6 @@
 <launch>
 
-    <include file = "$(find kinectv2_client)/launch/kinect.launch">
+    <include file = "$(find kinect_v2_client)/launch/kinect.launch">
       <arg name="camera_name" value="camera" />
       <arg name="camera_frame" value="camera_link" />
       <arg name="base_frame" value="base_link" />
@@ -18,8 +18,8 @@
       <arg name="okao_name" value="okao_1" />
     </include>
 
-<!--
-    <include file = "$(find kinectv2client)/launch/kinect.launch">
+
+    <include file = "$(find kinect_v2_client)/launch/kinect.launch">
       <arg name="camera_name" value="kinect_2" />
       <arg name="camera_frame" value="kinect2_link" />
       <arg name="base_frame" value="map" />
@@ -38,7 +38,7 @@
     </include>
 
 
-    <include file = "$(find kinectv2client)/launch/kinect.launch">
+    <include file = "$(find kinect_v2_client)/launch/kinect.launch">
       <arg name="camera_name" value="kinect_3" />
       <arg name="camera_frame" value="kinect3_link" />
       <arg name="base_frame" value="map" />
@@ -57,7 +57,7 @@
     </include>
 
 
-    <include file = "$(find kinectv2client)/launch/kinect.launch">
+    <include file = "$(find kinect_v2_client)/launch/kinect.launch">
       <arg name="camera_name" value="kinect_4" />
       <arg name="camera_frame" value="kinect4_link" />
       <arg name="base_frame" value="map" />
@@ -75,7 +75,7 @@
       <arg name="okao_name" value="okao_4" />
     </include>
 
-    <include file = "$(find kinectv2client)/launch/kinect.launch">
+    <include file = "$(find kinect_v2_client)/launch/kinect.launch">
       <arg name="camera_name" value="kinect_5" />
       <arg name="camera_frame" value="kinect5_link" />
       <arg name="base_frame" value="map" />
@@ -93,7 +93,7 @@
       <arg name="okao_name" value="okao_5" />
     </include>
 
-    <include file = "$(find kinectv2client)/launch/kinect.launch">
+    <include file = "$(find kinect_v2_client)/launch/kinect.launch">
       <arg name="camera_name" value="kinect_6" />
       <arg name="camera_frame" value="kinect6_link" />
       <arg name="base_frame" value="map" />
@@ -111,7 +111,7 @@
       <arg name="okao_name" value="okao_6" />
     </include>
 
-    <include file = "$(find kinectv2client)/launch/kinect.launch">
+    <include file = "$(find kinect_v2_client)/launch/kinect.launch">
       <arg name="camera_name" value="kinect_7" />
       <arg name="camera_frame" value="kinect4_link" />
       <arg name="base_frame" value="map" />
@@ -130,7 +130,7 @@
     </include>
 
 
--->
+
 
 
 </launch>

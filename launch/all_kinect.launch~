@@ -1,6 +1,6 @@
 <launch>
 
-    <include file = "$(find kinectv2_client)/launch/kinect.launch">
+    <include file = "$(find kinect_v2_client)/launch/kinect.launch">
       <arg name="camera_name" value="camera" />
       <arg name="camera_frame" value="camera_link" />
       <arg name="base_frame" value="base_link" />
@@ -10,7 +10,7 @@
       <arg name="transform" value="transform_1" />
       <arg name="x" value="0.1" />
       <arg name="y" value="0" />
-      <arg name="z" value="1.0" />
+      <arg name="z" value="0.87" />
       <arg name="yaw" value="0" />
       <arg name="pitch" value="-0.227" />
       <arg name="roll" value="0" />
