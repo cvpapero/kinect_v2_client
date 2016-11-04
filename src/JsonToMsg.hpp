@@ -1,4 +1,7 @@
 /*
+2016.10.9-----
+顔角度からをnose joint定義
+
 2014.10.29------------------------
 このヘッダがあるだけでJSON ---> ROS Messageできるようにする
 */
@@ -11,19 +14,30 @@
 //#include <tf2_ros/transform_broadcaster.h>
 #include <cstdlib>
 
-typedef std::map<int, std::string> JointMap;
+#include <unordered_map>   
 
-/*
-class POSE{
-public:
-  double x;
-  double y;
-  double z;
+using namespace std;
+
+
+
+class Angle{
+ public:
+  double pan;
+  double tilt;
 };
-*/
+
+//c++11じゃないと使えない？
+unordered_map<long long, Angle> angle_map;
+unordered_map<long long, int> miscount;
+unordered_map<long long, vector<Angle> > angle_stacks;
+
+
 
 namespace JsonToMsg{
 
+
+
+  
   
   bool publishJointTF(ros::NodeHandle& nh, 
 		      tf::TransformBroadcaster& br, tf::Transform& transform, 
@@ -76,13 +90,26 @@ namespace JsonToMsg{
     return true;
   }
   */
+
+
+  geometry_msgs::Point calc_nose_pos(geometry_msgs::Point head, double pan, double tilt)
+  {
+    geometry_msgs::Point p;
+    double l = 0.1;
+    p.x = head.x+l*cos(pan)*sin(tilt);
+    p.y = head.y+l*sin(pan)*sin(tilt);
+    p.z = head.z+l*cos(tilt);
+    return p;
+  }
+  
   void body(ros::NodeHandle& nh, 
-	    /*tf::TransformBroadcaster& br, tf::Transform& transform,*/
 	    const KinectPack kinectPack , humans_msgs::Humans *kinect_msg, 
 	    double cols, double rows, std::string camera_frame)
   {
 
-    JointMap named_joints;
+
+    std::vector<std::string> named_joints;
+    named_joints.resize(25);
     named_joints[0] = "SpineBase";
     named_joints[1] = "SpineMid"; 
     named_joints[2] = "Neck";  
@@ -109,14 +136,11 @@ namespace JsonToMsg{
     named_joints[23] = "HandTipRight";
     named_joints[24] = "ThumbRight";
 
-    //std::cout << kinectPack.bodies.jsonBodyInfo << std::endl;
 
     picojson::value v;
     std::string err;
     picojson::parse( v, kinectPack.bodies.jsonBodyInfo.begin(), 
 		     kinectPack.bodies.jsonBodyInfo.end(), &err );
-
-
 
     if ( err.empty() )
       {
@@ -134,36 +158,42 @@ namespace JsonToMsg{
 	  {
 	    picojson::object &objBody 
 	      = itrBody->get<picojson::object>();
-	    bool isTracking 
+	    bool isTracked
 	      =  objBody["isTracked"].get< bool >() ;
-	    if ( isTracking )
+	    
+	    
+	    if ( isTracked )
 	      {
 		//std::cout << objBody["trackingID"].get< std::string >() << std::endl;
-		long long tracking_id 
-		  = std::atoll( objBody["trackingID"].get< std::string >().c_str() );
-		//std::cout << "tracking_id[" << index << "]:" << tracking_id << std::endl;
-		humans_msgs::Human tmp_human;
-		//hoge.body.is_tracked = isTracking;
+		//long long tracking_id 
+		//  = objBody["trackingID"].get< std::int64 >();
 		
-		tmp_human.body.is_tracked = isTracking;
+		long long tracking_id
+		  = std::atoll( objBody["trackingID"].get< std::string >().c_str() );
+
+		bool isSpeaked = false;
+
+		//if not speaking data
+		if (objBody["isSpeaked"].is< bool >()){
+		  isSpeaked  =  objBody["isSpeaked"].get< bool >() ; //temp
+		}
+		
+		//std::cout << "tracking_id[" << index << "]:" << tracking_id << std::endl;
+		
+		humans_msgs::Human tmp_human;
+		tmp_human.body.is_tracked = isTracked;
+		tmp_human.body.is_speaked = isSpeaked;
 	        tmp_human.body.tracking_id = tracking_id;
 		tmp_human.body.left_hand_state 
 		  = objBody["leftHandState"].get< double >() ;
 	        tmp_human.body.right_hand_state 
 		  = objBody["rightHandState"].get< double >() ;
-		
-		/*
-		kinect_msg->human[index].body.is_tracked = isTracking;
-		kinect_msg->human[index].body.tracking_id = tracking_id;
-		kinect_msg->human[index].body.left_hand_state = objBody["leftHandState"].get< double >() ;
-		kinect_msg->human[index].body.right_hand_state = objBody["rightHandState"].get< double >() ; 
-		*/
-		//kinect_msg->human.push_back( hoge );
 
 		picojson::array arrayJoint 
 		  = objBody["Joints"].get<picojson::array>();
-		//kinect_msg->human[index].body.joints.resize(arrayJoint.size());
+
 		int j_name = 0;
+		geometry_msgs::Point head_position;
 		for( std::vector<picojson::value>::iterator itrJoint = arrayJoint.begin(); 
 		     itrJoint != arrayJoint.end(); ++itrJoint, ++j_name)
 		  {
@@ -213,7 +243,97 @@ namespace JsonToMsg{
 				       j_name, camera_frame);
 		      }
 		    */
+		    
+		    //Get head position
+		    if(named_joints[j_name]=="Head")
+		      {
+			head_position.x = tmp_joint.position.x;
+			head_position.y = tmp_joint.position.y;
+			head_position.z = tmp_joint.position.z;
+		      }
+		    
 		  }
+
+		   
+		picojson::object face_info
+		  = objBody["FaceInfo"].get<picojson::object>();
+			
+		picojson::object rotation 
+		  = face_info["Rotation"].get<picojson::object>();
+		
+		tmp_human.body.face_info.rotation.r = (double)rotation["R"].get<double>();
+		tmp_human.body.face_info.rotation.p = (double)rotation["P"].get<double>();
+		tmp_human.body.face_info.rotation.y = (double)rotation["Y"].get<double>();
+
+
+		//角度を保存する
+		//なぜならheadは動いているのにnoseが固定されてたらおかしい
+		//角度を保存するとheadとnoseの位置関係を覚えられる
+
+		bool face_is_tracked =  face_info["isTracked"].get< bool >();
+		double pan, tilt;
+		if(face_is_tracked)
+		  {	
+		    //ここにJoint noseの変換
+		    pan = tmp_human.body.face_info.rotation.y;
+		    tilt = tmp_human.body.face_info.rotation.p;
+		    
+		    miscount[ tracking_id ] = 0;
+
+		  }
+		else
+		  {
+		    //もし見失ったら
+		    //cout << "face miss" << endl;
+		    int th = 5;
+		    if(miscount[ tracking_id ] < th)
+		      {	
+			pan = angle_map[ tracking_id ].pan;
+			tilt = angle_map[ tracking_id ].tilt; 
+		      }
+		    else
+		      {
+			pan = 0;
+			tilt = 0;
+		      }
+		    ++miscount[ tracking_id ];
+		  }
+
+
+		Angle angle;
+		angle.pan = pan;
+		angle.tilt = tilt;
+		
+		Angle angle_ave;
+
+		//===Calc MovAve=and=Delete===//
+		angle_stacks[tracking_id].push_back( angle );
+		int angle_stacks_size = angle_stacks[tracking_id].size();
+		int stack_size = 3;
+		if (angle_stacks_size > stack_size)
+		  {
+		    //cout<<nose_stacks[human.body.tracking_id].at(0)<<endl;
+		    double sum_p = 0, sum_t = 0;
+		    
+		    for(int i = 0; i < angle_stacks_size; ++i)
+		      {
+			sum_p += angle_stacks[tracking_id][i].pan;
+			sum_t += angle_stacks[tracking_id][i].tilt;
+		      }
+		    angle_ave.pan = sum_p/angle_stacks_size;
+		    angle_ave.tilt = sum_t/angle_stacks_size;
+
+		    angle_stacks[tracking_id].erase(angle_stacks[tracking_id].begin());
+		  }
+
+		angle_map[ tracking_id ].pan = angle_ave.pan;
+		angle_map[ tracking_id ].tilt = angle_ave.tilt;
+	    		
+		humans_msgs::Joints nose;
+		nose.position = calc_nose_pos(head_position, angle_ave.pan, angle_ave.tilt-(90.*M_PI/180.));
+		nose.joint_name = "nose";
+		tmp_human.body.joints.push_back( nose );
+		
 		kinect_msg->human.push_back( tmp_human );	
 		++people_num;
 	      } 

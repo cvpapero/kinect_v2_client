@@ -28,7 +28,7 @@
 #include "KinectPackUtil.hpp"
 #include "KinectPack.h"
 #include "zmq.hpp"
-#include "JsonToMsg.hpp"
+#include "JsonToMsg2.hpp"
 using namespace std;
 class Connection
 {
@@ -48,16 +48,20 @@ private:
   string port;
   string c_frame;//, p_frame;
   string url;
+  bool viz_flag;
   double px, py, pz, roll, pich, yaw;
+  
+  JsonToMsg::Json2Msg jm;
 
 public:
   Connection()
     :it(nh), pnh("~")
   {
     cout << __FUNCTION__ << endl;
-    pnh.param<std::string>("ipaddress", ipaddress, "133.19.23.48") ;
+    pnh.param<std::string>("ip", ipaddress, "133.19.23.160") ;
     pnh.param<std::string>("port", port, "7745");
     pnh.param<std::string>("c_frame", c_frame, "camera_link");
+    pnh.param<bool>("viz_flag", viz_flag, false);
 
     string color_topic, depth_topic, bodyindex_topic;
     color_topic = "/" + c_frame + "/image/color";
@@ -68,7 +72,7 @@ public:
     depth_pub = it.advertise( depth_topic, 1 );
     bodyindex_pub = it.advertise( bodyindex_topic, 1 );
 
-    kinectv2_pub = nh.advertise<humans_msgs::Humans>("/humans/kinect_v2",10);
+    kinectv2_pub = nh.advertise<humans_msgs::Humans>("/humans/kinect_v2",1);
     try
       {
 	zmq::context_t *conetext = new zmq::context_t( 10 );
@@ -88,6 +92,8 @@ public:
       {
 	cerr << __FUNCTION__ << ":" << e.what() << endl;
       }
+
+
   }
   void start()
   {
@@ -109,8 +115,11 @@ public:
 
   void test()
   {
+    double pre_time = ros::Time::now().toSec();
+    
     while( ros::ok() )
       {
+	ros::Time time = ros::Time::now();
 	// REP-REQ形式なので要求メッセージを送信する
 	Connection::send("test message");
 	// 現在はどんな文字列を送っても違いはない
@@ -121,8 +130,13 @@ public:
 	// 送られてくるデータ形式と異なるとエラー
 	KinectPack kinectPack;
 	MsgPackUtil::unpack( message, kinectPack );
+	if (viz_flag==true){
+	  //受信したJSON形式データの表示
+	  std::cout <<"kinect: " << kinectPack.bodies.jsonBodyInfo << std::endl;
+	}
 	//受信したJSON形式データの表示
-	std::cout <<"kinect: " << kinectPack.bodies.jsonBodyInfo << std::endl;
+	//std::cout <<"kinect: " << kinectPack.bodies.jsonBodyInfo << std::endl;
+	
 	// 文字列をMat型に変換
 	cv::Mat imageColor;
 	try
@@ -151,44 +165,48 @@ public:
 	  {
 	    cout << "BodyIndex:" << e.what() << endl;
 	  }
-	//jsonからROSmessage
-	humans_msgs::Humans kinect_msg;
-	double cols_scale = (float)imageColor.cols / (float)imageDepth.cols;
-	double rows_scale = (float)imageColor.rows / (float)imageDepth.rows;
-	JsonToMsg::body(nh,
-			kinectPack, &kinect_msg, 
-			cols_scale, rows_scale, c_frame);
-	// 検知した人間のJoint情報を元にスケルトンを描画
-	//KinectPackUtil::drawSkeleton( imageColor, kinectPack, 
-	//cols_scale, rows_scale);
+	
 	cv::waitKey(1);
-
 	cv_bridge::CvImage cv_img_color, cv_img_depth, cv_img_bodyindex;
-
-	ros::Time time = ros::Time::now();
 
 	cv_img_color.header.stamp = time;
 	cv_img_color.header.frame_id = c_frame;
 	cv_img_color.encoding = "bgr8";
 	cv_img_color.image = imageColor;
-	
+
+	/*
+	// if need depth 
 	cv_img_depth.header.stamp = time;
 	cv_img_depth.header.frame_id = c_frame;
 	cv_img_depth.encoding = "16UC1";
 	cv_img_depth.image = imageDepth;
-	
+
 	cv_img_bodyindex.header.stamp = time;
 	cv_img_bodyindex.header.frame_id = c_frame;
 	cv_img_bodyindex.encoding = "mono8";
 	cv_img_bodyindex.image = imageBodyIndex;
-
+	*/
+	
 	color_pub.publish( cv_img_color.toImageMsg() );
-	depth_pub.publish( cv_img_depth.toImageMsg() );
-	bodyindex_pub.publish( cv_img_bodyindex.toImageMsg() );
-
+	//depth_pub.publish( cv_img_depth.toImageMsg() );
+	//bodyindex_pub.publish( cv_img_bodyindex.toImageMsg() );
+       
+	//jsonからROSmessage
+	humans_msgs::Humans kinect_msg;
+	double cols_scale = (float)imageColor.cols / (float)imageDepth.cols;
+	double rows_scale = (float)imageColor.rows / (float)imageDepth.rows;
+	jm.body(kinectPack, &kinect_msg, 
+		cols_scale, rows_scale, c_frame);
+	
 	kinect_msg.header.stamp = time;
 	kinect_msg.header.frame_id = c_frame;
 	kinectv2_pub.publish( kinect_msg );
+
+	//calc FPS
+	double now_time = ros::Time::now().toSec();
+	double fps = 1/(now_time - pre_time);
+	ROS_INFO("Pub msg FPS: %f", fps);
+	pre_time = now_time;
       }
   }
 };

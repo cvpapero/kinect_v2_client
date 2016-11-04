@@ -15,6 +15,9 @@ find_package(catkin REQUIRED COMPONENTS
   tf
 )
 
+
+set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -106,6 +109,12 @@ find_library(ZMQ_LIBRARIE
 	HITNS /usr/local/lib/
 	PATH_SUFFIXES lib
 )
+
+find_library(MSGPACK_LIBRARIE
+	NAMES libmsgpackc.so
+	HITNS /usr/local/lib/
+	PATH_SUFFIXES lib
+)
 ## Declare a cpp library
 # add_library(kinect_v2_client
 #   src/${PROJECT_NAME}/kinect_v2_client.cpp
@@ -172,4 +181,10 @@ find_library(ZMQ_LIBRARIE
 # catkin_add_nosetests(test)
 
 add_executable(kinect_v2_client src/kinect_v2_client.cpp src/Util.cpp src/base64.cpp)
-target_link_libraries(kinect_v2_client ${catkin_LIBRARIES} ${OpenCV_LIBS} ${ZMQ_LIBRARIE} msgpack)
+target_link_libraries(kinect_v2_client ${catkin_LIBRARIES} ${OpenCV_LIBS} ${ZMQ_LIBRARIE} ${MSGPACK_LIBRARIE})
+
+add_executable(save_2kinects src/save_2kinects.cpp)
+target_link_libraries(save_2kinects ${catkin_LIBRARIES})
+
+add_executable(save_kinect src/save_kinect.cpp)
+target_link_libraries(save_kinect ${catkin_LIBRARIES})
