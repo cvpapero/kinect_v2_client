@@ -79,7 +79,7 @@ class JointChecker():
     def set_point(self, pos, addx=0, addy=0, addz=0, rotate=False):
         pt = Point()
         if rotate == True:
-            pt.x, pt.y, pt.z = -1*pos[0]+1+addx, pos[1]+addy, pos[2]+addz
+            pt.x, pt.y, pt.z = -1*pos[0]+1+addx, -1*pos[1]+addy, pos[2]+addz
         else:
             pt.x, pt.y, pt.z = pos[0]+addx, pos[1]+addy, pos[2]+addz
         return pt
@@ -98,7 +98,7 @@ class JointChecker():
     def viz_publish(self):
 
         if len(self.human_1.human)==0 or len(self.human_2.human)==0:
-            print "pass"         
+            print "now_human one"         
         else:
             
             humans = [self.human_1.human[0], self.human_2.human[0]]
@@ -108,14 +108,22 @@ class JointChecker():
             msgs = MarkerArray()
             for u, human in enumerate(humans):
 
+                # ---speacking ON/OFF check---
                 color = 2
-                if human.body.is_speaked: #and human.body.face_info.properties.mouth_moved=="yes":
+                if human.body.is_speaked: 
                     color = 1
+
+                scale = 1
+                """
+                if human.body.is_speaked and human.body.face_info.properties.mouth_moved=="yes":
+                    scale = 3
+                    color = 3
+                """
                 
-            
                 # ---points---
                 points = []
-                pmsg = self.rviz_obj(u, 'p'+str(u), 7, [0.03, 0.03, 0.03], self.carray[0], 1.0)
+                pscale = 0.03*scale
+                pmsg = self.rviz_obj(u, 'p'+str(u), 7, [pscale, pscale, pscale], self.carray[0], 1.0)
                 for p in human.body.joints:
                     points.append(self.set_point([p.position.x, p.position.y, p.position.z], rotate=self.rotates[u]))
                 pmsg.points = points
@@ -123,7 +131,8 @@ class JointChecker():
 
             
                 # ---lines---
-                lmsg = self.rviz_obj(u, 'l'+str(u), 5, [0.01, 0.01, 0.01], self.carray[color], 1.0)  
+                lscale = 0.01*scale
+                lmsg = self.rviz_obj(u, 'l'+str(u), 5, [lscale, lscale, lscale], self.carray[color], 1.0)  
                 for ls in self.llist:
                     for l in range(len(ls)-1):
                         for add in range(2):

@@ -181,6 +181,7 @@ public:
 	cv_img_depth.encoding = "16UC1";
 	cv_img_depth.image = imageDepth;
 
+	
 	cv_img_bodyindex.header.stamp = time;
 	cv_img_bodyindex.header.frame_id = c_frame;
 	cv_img_bodyindex.encoding = "mono8";

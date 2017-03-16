@@ -1,0 +1,29 @@
+
+<launch>
+
+  <!-- arg name="save" value="true" />	
+  <arg name="output" value="20161128_3ps" / -->
+  
+  <node pkg="kinect_v2_client" type="kinect_v2_client" respawn="false" name="kinect1">
+	<param name="ip" value="133.19.23.160" /> 
+  	<param name="c_frame" value="camera_link/1" />
+	<remap from="/humans/kinect_v2" to="/humans/kinect_v2/1" />
+  </node>
+
+  <node pkg="kinect_v2_client" type="kinect_v2_client" respawn="false" name="kinect">
+	<param name="ip" value="133.19.23.161" /> 
+  	<param name="c_frame" value="camera_link/2" />
+	<remap from="/humans/kinect_v2" to="/humans/kinect_v2/2" />
+  </node>
+
+  <!-- ここは端末で -->
+  <!-- node pkg="kinect_v2_client" type="save_2kinects"  name="merge_joints" output="screen">
+  	<param name="save" value="$(arg save)" />
+	<param name="output" value="$(arg output)" /> 
+  </node -->
+
+  <!-- node pkg="kinect_v2_client" type="joint_checker_nose.py"  name="viz">
+  	<param name="rotate" value="True" /> 
+  </node -->
+
+</launch>

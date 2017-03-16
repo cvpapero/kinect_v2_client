@@ -52,9 +52,11 @@ private:
   ros::NodeHandle nh;
   ros::NodeHandle pnh;
   ros::Subscriber sub;
+  ros::Publisher k_pub;
 
   map< long long, vector<JData> > jpersons;
 
+  bool save_switch;
   string joint_filename;
   string output_filename;
   stringstream out_file;
@@ -90,7 +92,10 @@ public:
 
     sync.registerCallback( boost::bind( &MyClass::callback, this, _1, _2 ) );
     
+    k_pub = nh.advertise<humans_msgs::Humans>("/humans/kinect_v2",1);
+    
     //sub = nh.subscribe("/humans/kinect_v2", 1, &MyClass::callback, this);
+    pnh.param<bool>("save", save_switch, true);
     pnh.param<std::string>("output", output_filename, "test");
     out_file << output_filename << ".json";
     pre_sec = ros::Time::now().toSec();
@@ -99,7 +104,12 @@ public:
   
   ~MyClass()
   {
-    output_table();
+    if (save_switch)
+      {
+	output_table();
+      }
+    else
+      cout << "no save" <<endl;
   }
 
 
@@ -209,6 +219,14 @@ public:
     //msgs.push_back(msg2);
     int p_num = msgs.size(); //+msg2->human.size();
 
+    
+    humans_msgs::Humans h_msgs;
+    //h_msgs.header
+    h_msgs.human.resize(p_num);
+    h_msgs.human = msgs;
+    k_pub.publish(h_msgs);
+
+    
     double now_time;
     
     // 現在時刻を取得してmyTimeに格納．通常のtime_t構造体とsuseconds_tに値が代入

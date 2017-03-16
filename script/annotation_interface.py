@@ -3,6 +3,10 @@
 
 
 """
+2016.12.7----
+三人の対話におけるannotationのInterface
+
+
 2016.10.19----
 interaction dataをannotationするためのinterface
 
@@ -128,8 +132,16 @@ class ANNOTATION(QtGui.QWidget):
 
         """
 
-
-
+        # Slider
+        boxSld = QtGui.QHBoxLayout()
+        lcd = QtGui.QLCDNumber(self)
+        self.sld = QtGui.QSlider(QtCore.Qt.Horizontal, self)
+        self.sld.valueChanged.connect(lcd.display)
+        self.sld.valueChanged.connect(self.sliderChange)
+        boxSld.addWidget(lcd)
+        boxSld.addWidget(self.sld)
+        #form.addWidget(sld)
+        
         
         #テーブルの初期化
         #horizonはuser2の時間
@@ -141,6 +153,7 @@ class ANNOTATION(QtGui.QWidget):
 
         #アイテムがクリックされたらグラフを更新
         self.table.itemClicked.connect(self.clickUpdateTable)
+        self.table.itemActivated.connect(self.activatedUpdateTable)
         self.table.setItem(0, 0, QtGui.QTableWidgetItem(1))
 
         boxTable = QtGui.QHBoxLayout()
@@ -152,7 +165,8 @@ class ANNOTATION(QtGui.QWidget):
         grid.addLayout(boxInput,2,0)
         grid.addLayout(boxOutput,3,0)
         grid.addLayout(boxStop,4,0)
-        grid.addLayout(boxTable,5,0)
+        grid.addLayout(boxSld,5,0)
+        grid.addLayout(boxTable,6,0)
 
         self.setLayout(grid)
         self.resize(400,100)
@@ -250,7 +264,14 @@ class ANNOTATION(QtGui.QWidget):
         #jointsの可視化
         # self.vizJoint(self.c)
 
+    def sliderChange(self, value):
+        print "test", value
         
+
+    def activatedUpdateTable(self, cItem):
+        row = cItem.row()
+        col = cItem.column()
+        print "row:", row,", col:", col#, ". tip:",self.tip        
         
 
     def inputData(self):
@@ -261,6 +282,9 @@ class ANNOTATION(QtGui.QWidget):
         print "data shape:", input_data.shape
         
         self.updateTable(input_data)
+
+        self.sld.setMaximum(input_data.shape[0])
+        
         print "end"
 
         

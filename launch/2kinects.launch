@@ -6,22 +6,18 @@
 	<remap from="/humans/kinect_v2" to="/humans/kinect_v2/1" />
   </node>
 
-  <node pkg="kinect_v2_client" type="kinect_v2_client" respawn="false" name="kinect2">
+  <node pkg="kinect_v2_client" type="kinect_v2_client" respawn="false" name="kinect">
 	<param name="ip" value="133.19.23.161" /> 
   	<param name="c_frame" value="camera_link/2" />
 	<remap from="/humans/kinect_v2" to="/humans/kinect_v2/2" />
   </node>
 
-  <node pkg="kinect_v2_client" type="checker2kinects.py"  name="checker" output="screen">
-  </node>
-  
-  <!-- node pkg="kinect_v2_client" type="joint_checker_nose.py"  name="viz1">
-  	<param name="topic" value="/humans/kinect_v2/1" /> 
+  <node pkg="kinect_v2_client" type="save_2kinects"  name="merge_joints">
+  	<param name="save" value="false" /> 
   </node>
 
-  <node pkg="kinect_v2_client" type="joint_checker_nose.py"  name="viz2">
-  	<param name="topic" value="/humans/kinect_v2/2" />
-	<param name="rotate" value="True" />
+  <!-- node pkg="kinect_v2_client" type="joint_checker_nose.py"  name="viz">
+  	<param name="rotate" value="True" /> 
   </node -->
 
 </launch>

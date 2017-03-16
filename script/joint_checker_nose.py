@@ -18,6 +18,7 @@ import json
 import os
 import copy
 import sys
+import math
 
 #PKG = 'joint_checker'
 #import roslib; roslib.load_manifest(PKG)
@@ -75,10 +76,10 @@ class JointChecker():
     """
 
     
-    def set_point(self, pos, addx=0, addy=0, addz=0):
+    def set_point(self, pos, addx=0, addy=0, addz=0, rotate=False):
         pt = Point()
-        if self.rotate == True:
-            pt.x, pt.y, pt.z = -1*pos[0]+1+addx, pos[1]+addy, pos[2]+addz
+        if rotate == True:
+            pt.x, pt.y, pt.z = -1*pos[0]+1+addx, -1*pos[1]+addy, pos[2]+addz
         else:
             pt.x, pt.y, pt.z = pos[0]+addx, pos[1]+addy, pos[2]+addz
         return pt
@@ -102,15 +103,25 @@ class JointChecker():
         for u, human in enumerate(msg.human):
 
             color = 2
-            if human.body.is_speaked: #and human.body.face_info.properties.mouth_moved=="yes":
-                color = 1
-                
+            speaked = 1 if human.body.is_speaked > 0.005 else 0 
+            #speaked = 1 if 20*math.log10(human.body.is_speaked) > 50 else 0 
             
+            if speaked: #and human.body.face_info.properties.mouth_moved=="yes":
+                color = 1
+
+            rotate = False
+            """
+            if self.rotate and (u+1)%2 != 0:
+                rotate = True
+            """
+            # 最初の人(u=0)だけ回転して表示
+            if self.rotate and u == 0:
+                rotate = True
             # ---points---
             points = []
             pmsg = self.rviz_obj(u, 'p'+str(u), 7, [0.03, 0.03, 0.03], self.carray[0], 1.0)
             for p in human.body.joints:
-                points.append(self.set_point([p.position.x, p.position.y, p.position.z]))
+                points.append(self.set_point([p.position.x, p.position.y, p.position.z], rotate=rotate))
             pmsg.points = points
             msgs.markers.append(pmsg)
 
@@ -127,7 +138,7 @@ class JointChecker():
             tmsg = self.rviz_obj(u, 't'+str(u), 9, [0, 0, 0.1], self.carray[color], 1.0)
             #points.append()
             head = human.body.joints[3]
-            tmsg.pose.position = self.set_point([head.position.x, head.position.y, head.position.z+0.5])
+            tmsg.pose.position = self.set_point([head.position.x, head.position.y, head.position.z+0.5], rotate=rotate)
             tmsg.pose.orientation.w = 1.0
             face_prop = human.body.face_info.properties
             tmsg.text = "Happy:"+face_prop.happy+"\n"\

@@ -1,0 +1,6 @@
+
+	<include file="$(find kinect_v2_client)/launch/2kinects_set.launch">
+		  <arg name="save" value="true" />	
+	 	  <arg name="output" value="test" />
+	</include>
+

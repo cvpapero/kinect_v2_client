@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(kinect_v2_client)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
+
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   humans_msgs
@@ -188,3 +186,9 @@ target_link_libraries(save_2kinects ${catkin_LIBRARIES})
 
 add_executable(save_kinect src/save_kinect.cpp)
 target_link_libraries(save_kinect ${catkin_LIBRARIES})
+
+add_executable(save_2kinects_audio src/save_2kinects_audio.cpp)
+target_link_libraries(save_2kinects_audio ${catkin_LIBRARIES})
+
+add_executable(save_kinect_orientation src/save_kinect_orientation.cpp)
+target_link_libraries(save_kinect_orientation ${catkin_LIBRARIES})
